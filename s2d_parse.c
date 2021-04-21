@@ -12,7 +12,7 @@
 
 static int s2d_width(const char *str, int line, int len);
 
-static void s2d_snprint(int x, int y, int align, const char *str, uObjMtx *buf, int len) {
+static void s2d_snprint(int x, int y, int align, const char *str, char toPrint, uObjMtx *buf, int len) {
 	char *p = str;
 	int tmp_len = 0;
 	int orig_x = x;
@@ -131,7 +131,10 @@ static void s2d_snprint(int x, int y, int align, const char *str, uObjMtx *buf, 
 				if (current_char != '\0' && current_char != CH_SEPARATOR) {
 					char *tbl = segmented_to_virtual(s2d_kerning_table);
 
-					draw_s2d_glyph(current_char, x, y, (buf++));
+					if (toPrint == -1) {
+						draw_s2d_glyph(current_char, x, y, buf);
+					}
+					buf++;
 					(x += (tbl[(int) current_char] * (BASE_SCALE * myScale)));
 				}
 		}
@@ -150,7 +153,7 @@ void s2d_print(int x, int y, int align, const char *str, uObjMtx *buf) {
 	if (s2d_check_align(align) != 0) return;
 	if (s2d_check_str(str)     != 0) return;
 
-	s2d_snprint(x, y, align, str, buf, s2d_strlen(str));
+	s2d_snprint(x, y, align, str, -1, buf, s2d_strlen(str));
 }
 
 void s2d_print_alloc(int x, int y, int align, const char *str) {
@@ -162,7 +165,7 @@ void s2d_print_alloc(int x, int y, int align, const char *str) {
 	len = s2d_strlen(str);
 
 	uObjMtx *b = alloc(sizeof(uObjMtx) * len);
-	s2d_snprint(x, y, align, str, b, len);
+	s2d_snprint(x, y, align, str, -1, b, len);
 }
 
 void s2d_type_print(int x, int y, int align, const char *str, uObjMtx *buf, int *pos) {
@@ -173,7 +176,7 @@ void s2d_type_print(int x, int y, int align, const char *str, uObjMtx *buf, int 
 	
 	len = s2d_strlen(str);
 
-	s2d_snprint(x, y, align, str, buf, *pos);
+	s2d_snprint(x, y, align, str, -1, buf, *pos);
 	if (s2d_timer % 2 == 0) {
 		if (*pos < len) {
 			(*pos)++;

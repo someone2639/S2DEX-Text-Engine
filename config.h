@@ -6,7 +6,7 @@
 /**
  * SET YOUR FONT NAME HERE
  */
-#define FONTNAME impact
+#define FONTNAME timesnewroman
 
 
 /***********
@@ -21,6 +21,7 @@
  * FOR A GAME THAT ISN'T SM64
  *
  *****************************/
+
 
 // magic macros and font header inclusion
 #define GLUE(a, b) a##b
@@ -77,14 +78,12 @@ extern char *proutSprintf(char *dst, const char *src, size_t count);
 #define TAB_WIDTH_H TEX_WIDTH * 2
 #define TAB_WIDTH_V TEX_WIDTH / 2
 
-// Set these to optimize s2d texture "cache"
+// (Not implemented) Set these to optimize s2d texture "cache"
 #define TEX_WIDTH 16
 #define TEX_HEIGHT 16
 #define TEX_BITDEPTH 8
-
 // Texture resolution (pixels on the texture per pixel on the framebuffer)
 #define TEX_RES 1
-
 #define _NUM_CACHE (4096 / (TEX_WIDTH * TEX_HEIGHT * (TEX_BITDEPTH / 8)))
 
 #endif
