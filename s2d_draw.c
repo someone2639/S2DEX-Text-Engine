@@ -33,6 +33,7 @@ Gfx s2d_text_init_dl[] = {
 
 void s2d_rdp_init(void) {
     gDPPipeSync(gdl_head++);
+    gDPPipelineMode(gdl_head++, G_PM_NPRIMITIVE);
     gDPSetTextureFilter(gdl_head++, G_TF_POINT);
     gSPDisplayList(gdl_head++, s2d_text_init_dl);
     gDPSetCycleType(gdl_head++, G_CYC_1CYCLE);
@@ -94,6 +95,7 @@ void draw_s2d_glyph(char c, int x, int y, uObjMtx *mt) {
 
     // mtx_pipeline(mt, x, y);
     mtx_pipeline2(mt, x, y);
+
 
     if (drop_shadow) {
         if (s2d_red != 0

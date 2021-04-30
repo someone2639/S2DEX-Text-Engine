@@ -1,6 +1,7 @@
 // ustdlib means un-standard library
 // i'm going to abuse so much of my power here lol
 #include "s2d_print.h"
+#include "config.h"
 // int s2d_atoi(char *s, char **s2) {
 // 	int ret = 0;
 // 	int isNegative = (*s == '-');
@@ -52,4 +53,11 @@ int s2d_strlen(char *s) {
 	char *p = s;
 	do {result++;} while (*(++p) != '\0');
 	return result;
+}
+
+void *s2d_calloc(int size) {
+	void *pt = alloc(size);
+	bzero(pt, size);
+
+	return pt;
 }

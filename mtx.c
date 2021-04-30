@@ -29,10 +29,10 @@ void mat2_copy(uObjMtx *dst, uObjMtx *src) {
 }
 
 void mat2_ident(uObjMtx *dst, float scale) {
-	dst->m.A = (1 << 16);
+	dst->m.A = ftoq(scale);
 	dst->m.B = 0;
 	dst->m.C = 0;
-	dst->m.D = (1 << 16);
+	dst->m.D = ftoq(scale);
 
 	dst->m.X = 0;
 	dst->m.Y = 0;
@@ -62,9 +62,11 @@ void mat2_scale(uObjMtx *dst, int scale) {
 
 #define	FTOFIX16(x)	(long)((x) * (float)(1 << 2))
 #define	FIX16TOF(x)	((float)(x) * (1.0f / (float)(1 << 2)))
+typedef s16   qs105_t;
+#define qs105(n)                      ((qs105_t)((n)*0x0020))
 void mat2_translate(uObjMtx *m, int x, int y) {
-	m->m.X = x<<2;
-	m->m.Y = y<<2;
+	m->m.X = FTOFIX16((float)x);
+	m->m.Y = FTOFIX16((float)y);
 }
 
 

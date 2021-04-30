@@ -9,41 +9,53 @@
 #include "s2d_print.h"
 #include "s2d_ustdlib.h"
 #include "s2d_error.h"
+#include "s2d_ustdlib.h"
 #include "s2d_optimized.h"
 #include "mtx.h"
 
 static int s2d_width(const char *str, int line, int len);
 static void s2d_snprint(int x, int y, int align, const char *str, int len);
 
-void make_new_list_el(S2DList *s) {
-    if (s->head == NULL) {
-        s->head = alloc(sizeof(S2DListNode));
-        s->tail = s->head;
-    } else {
-        if (s->tail) {
-            s->tail->next = alloc(sizeof(S2DListNode));
-            s->tail = s->tail->next;
+void insert_el_char(S2DList *s, S2DListNode *n) {
+    if (n == NULL) return;
+
+    S2DListNode *pt = s->head;
+
+    while (pt->next != NULL) {
+        if (pt->next == NULL) {
+            pt->next = n;
+            n->prev = pt;
+            return;
         }
+
+        if (n->glyph >= pt->glyph
+            && n->glyph < pt->next->glyph)
+        {
+            S2DListNode *prev = pt;
+            S2DListNode *next = pt->next;
+
+            n->next = next;
+            prev->next = n;
+            next->prev = n;
+            n->prev = prev;
+            s->len++;
+            return;
+        }
+        pt = pt->next;
     }
-    s->tail->next = NULL;
-    s->len++;
+
+    pt->next = n;
 }
 
-void mtx_pipeline_op(uObjMtx *m, int x, int y, int scale) {
-    // init
-    Mat4 tmp, rot, scal, translate;
-    guMtxIdentF(tmp);
-    guScaleF(scal, BASE_SCALE * (scale), BASE_SCALE * (scale), 0);
-    guRotateF(rot, (f32) myDegrees, 0, 0, 1.0f);
-    guTranslateF(translate, x, y, 0);
+#define FTOFIX16(x) (long)((x) * (float)(1 << 2))
+void mtx_pipeline_op(uObjMtx *m, int x, int y, float scale) {
+    m->m.BaseScaleX = FTOFIX32(scale);
+    // m->m.B = 0;
+    // m->m.C = 0;
+    m->m.BaseScaleY = FTOFIX32(scale);
 
-    mtxf_mul(tmp, tmp, scal);
-    mtxf_mul(tmp, tmp, rot);
-    mtxf_mul(tmp, tmp, translate);
-
-    gu_to_gs2dex(m, tmp);
-
-    // gSPObjMatrix(gdl_head++, m);
+    m->m.X = FTOFIX16((float)(x));
+    m->m.Y = FTOFIX16((float)(y));
 }
 
 void make_glyph(S2DList *s, int x, int y,
@@ -52,10 +64,11 @@ void make_glyph(S2DList *s, int x, int y,
                 float scl,
                 int d, int dx, int dy
 ) {
-    make_new_list_el(s);
-    S2DListNode *t = s->tail;
+    S2DListNode *t = s2d_calloc(sizeof(S2DListNode));
 
-    mtx_pipeline2(&t->mtx, x, y, scl);
+    t->mtx = s2d_calloc(sizeof(uObjMtx));
+
+    mtx_pipeline_op(t->mtx, x, y, scl);
 
     t->envR = r;
     t->envG = g;
@@ -65,42 +78,64 @@ void make_glyph(S2DList *s, int x, int y,
     t->glyph = glyph;
 
     if (d == 1) {
-        t->dropshadow = alloc(sizeof(uObjMtx));
-        mtx_pipeline_op(t->dropshadow, x + dx, y + dy, scl);
+        t->dropshadow = s2d_calloc(sizeof(uObjMtx));
+        // mtx_pipeline_op(t->dropshadow, x + dx, y + dy, scl);
+        mtx_pipeline_op(t->dropshadow, x + 8, y + 8, scl);
     }
+
+    if (s->head == NULL) {
+        s->head = t;
+        s->len = 1;
+        return;
+    }
+
+    insert_el_char(s, t);
+
 }
 
 #define CLAMP_0(x) ((x < 0) ? 0 : x)
 
-int slatch = 0;
 void draw_all_glyphs(S2DList *s) {
     S2DListNode *tmp = s->head;
+
+    gDPPipeSync(gdl_head++);
+    gDPSetCycleType(gdl_head++, G_CYC_COPY);
+    gDPSetRenderMode(gdl_head++, G_RM_SPRITE, G_RM_SPRITE2);
 
     while (tmp != NULL) {
         gDPPipeSync(gdl_head++);
         gDPSetEnvColor(gdl_head++, tmp->envR, tmp->envG, tmp->envB, tmp->envA);
-        gSPObjLoadTxtr(gdl_head++, &s2d_tex[tmp->glyph]);
-        // if (tmp->dropshadow) {
-        //     gDPPipeSync(gdl_head++);
-        //     gDPSetEnvColor(gdl_head++,
-        //                CLAMP_0(s2d_red - 100),
-        //                CLAMP_0(s2d_green - 100),
-        //                CLAMP_0(s2d_blue - 100),
-        //                s2d_alpha);
-        //     gSPObjMatrix(gdl_head++, &tmp->dropshadow);
-        //     gSPObjSprite(gdl_head++, &s2d_dropshadow);
-        //     gDPPipeSync(gdl_head++);
-        //     gDPSetEnvColor(gdl_head++, s2d_red, s2d_green, s2d_blue, s2d_alpha);
-        // }
 
-        gSPObjMatrix(gdl_head++, &tmp->mtx);
-        // gSPObjMatrix(gdl_head++, &s2d_mat);
-        gSPObjSprite(gdl_head++, &s2d_font);
-        // draw_s2d_glyph(tmp-/>glyph, tmp->x, tmp->y, &tmp->mtx);
+        if (tmp->prev == NULL) {
+            gSPObjLoadTxtr(gdl_head++, &s2d_tex[tmp->glyph]);
+            gDPLoadSync(gdl_head++);
+        }
+        else if (tmp->prev->glyph != tmp->glyph) {
+            gSPObjLoadTxtr(gdl_head++, &s2d_tex[tmp->glyph]);
+            gDPLoadSync(gdl_head++);
+        }
+
+        if (tmp->dropshadow) {
+            gDPPipeSync(gdl_head++);
+            gDPSetEnvColor(gdl_head++,
+                       CLAMP_0(tmp->envR - 100),
+                       CLAMP_0(tmp->envG - 100),
+                       CLAMP_0(tmp->envB - 100),
+                       tmp->envA);
+            gSPObjSubMatrix(gdl_head++, &tmp->dropshadow);
+            gSPObjSprite(gdl_head++, &s2d_dropshadow);
+            gDPPipeSync(gdl_head++);
+            gDPSetEnvColor(gdl_head++, tmp->envR, tmp->envG, tmp->envB, tmp->envA);
+        }
+
+        gSPObjSubMatrix(gdl_head++, tmp->mtx);
+        gSPObjRectangleR(gdl_head++, &s2d_font);
 
         tmp = tmp->next;
     }
-    slatch = 0;
+
+    gDPPipeSync(gdl_head++);
+    gDPSetCycleType(gdl_head++, G_CYC_1CYCLE);
 }
 
 
@@ -129,10 +164,7 @@ static void s2d_snprint(int x, int y, int align, const char *str, int len) {
             x = orig_x - s2d_width(str, line, len);
     }
 
-    S2DList *s2d_list = alloc(sizeof(S2DList));
-    s2d_list->head = NULL;
-    s2d_list->tail = NULL;
-    s2d_list->len = 0;
+    S2DList *s2d_list = s2d_calloc(sizeof(S2DList));
 
     do {
         char current_char = *p;
@@ -218,12 +250,14 @@ static void s2d_snprint(int x, int y, int align, const char *str, int len) {
                 if (current_char != '\0' && current_char != CH_SEPARATOR) {
                     char *tbl = segmented_to_virtual(s2d_kerning_table);
 
-                    make_glyph(s2d_list, x, y,
-                               current_char,
-                               s2d_red, s2d_green, s2d_blue, s2d_alpha,
-                               myScale,
-                               drop_shadow, drop_x, drop_y
-                    );
+                    if (current_char != ' ') {
+                        make_glyph(s2d_list, x, y,
+                                   current_char,
+                                   s2d_red, s2d_green, s2d_blue, s2d_alpha,
+                                   myScale,
+                                   drop_shadow, drop_x, drop_y
+                        );
+                    }
 
                     (x += (tbl[(int) current_char] * (BASE_SCALE * myScale)));
                 }

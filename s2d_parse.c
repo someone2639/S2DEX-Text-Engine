@@ -164,7 +164,7 @@ void s2d_print_alloc(int x, int y, int align, const char *str) {
 
 	len = s2d_strlen(str);
 
-	uObjMtx *b = alloc(sizeof(uObjMtx) * len);
+	uObjMtx *b = alloc(sizeof(uObjMtx) * len * 2);
 	s2d_snprint(x, y, align, str, -1, b, len);
 }
 
