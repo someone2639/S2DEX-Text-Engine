@@ -1,7 +1,6 @@
 #include <ultra64.h>
 #include <PR/gs2dex.h>
 #include <PR/gu.h>
-#include <stdarg.h>
 
 #include "config.h"
 
@@ -164,7 +163,7 @@ static int s2d_snprint(int x, int y, int align, const char *str, uObjMtx *buf, i
 				break;
 			default:
 				if (current_char != '\0' && current_char != CH_SEPARATOR) {
-					char *tbl = segmented_to_virtual(s2d_kerning_table);
+					char *tbl = seg2virt(s2d_kerning_table);
 
 					if (IS_RUNNING_ON_EMULATOR) {
 						if (drop_shadow && mode == MODE_DRAW_DROPSHADOW) {

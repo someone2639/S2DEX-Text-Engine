@@ -1,8 +1,7 @@
 # Makefile for s2d_engine.a
+default: all
 
 TARGET = libs2d_engine.a
-
-default: all
 
 BUILD_DIR ?= build
 DUMMY != mkdir -p $(BUILD_DIR)
@@ -16,7 +15,7 @@ AR = $(CROSS)ar
 
 INCLUDE_BASE := ../../
 I_DIRS = src include/n64/PR include/n64 include/libc include .
-FULL_I_DIRS = $(addprefix $(INCLUDE_BASE),$(I_DIRS))
+FULL_I_DIRS = $(addprefix $(INCLUDE_BASE),$(I_DIRS)) /usr/include/n64/
 I_FLAGS = $(foreach i,$(FULL_I_DIRS),-I$(i))
 
 TARGET_CFLAGS = -nostdinc -I include/libc -DTARGET_N64 -DF3DEX_GBI_2 -DNON_MATCHING -DAVOID_UB
@@ -30,9 +29,9 @@ clean:
 
 COPY_DIR := none
 ifneq ($(MAKECMDGOALS),clean)
-	ifeq ($(COPY_DIR),none)
-		$(error S2DEX Text Engine: No COPY_DIR defined!)
-	endif
+    ifeq ($(COPY_DIR),none)
+        $(error S2DEX Text Engine: No COPY_DIR defined!)
+    endif
 endif
 
 $(BUILD_DIR)/$(TARGET): $(O_FILES)

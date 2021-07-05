@@ -50,18 +50,17 @@ extern char s2d_kerning_table[];
 #define s2d_mat GLUE2(FONTNAME, _mtx)
 
 // Homebrew users: use this to rename your gdl head
-#define gdl_head gDisplayListHead
+// #define gdl_head gDisplayListHead
 extern Gfx *gdl_head;
 
-#include "src/game/game_init.h"
-#define CONTROLLER_INPUT gPlayer1Controller->buttonPressed
-#define CONTROLLER_HELD_INPUT gPlayer1Controller->buttonDown
+// #include "src/game/game_init.h"
+#define CONTROLLER_INPUT 0
+#define CONTROLLER_HELD_INPUT 0
 
 // Other games/Homebrew users: change these values
 
 // an allocator function of the format void *alloc(size_t bytes)
-#define alloc alloc_display_list
-extern void *alloc(size_t);
+#define alloc(x) allocator_malloc_align(x, 16);
 
 // your init functions for the RDP/RSP
 #define my_rdp_init my_rdp_init
@@ -70,7 +69,7 @@ extern void my_rsp_init(void);
 extern void my_rdp_init(void);
 
 // The frame timer that is used to time s2d_type_print
-#define s2d_timer gGlobalTimer
+#define s2d_timer gTimer
 extern u32 s2d_timer;
 
 // The equivalent vsprintf in your game (defaults to libultra _Printf)
@@ -87,7 +86,7 @@ extern char *proutSprintf(char *dst, const char *src, size_t count);
 #define TEX_HEIGHT 16
 #define TEX_BITDEPTH 8
 
-#define seg2virt segmented_to_virtual
+#define seg2virt
 #define IS_RUNNING_ON_EMULATOR (IO_READ(DPC_PIPEBUSY_REG) == 0)
 
 // Texture resolution (pixels on the texture per pixel on the framebuffer)
