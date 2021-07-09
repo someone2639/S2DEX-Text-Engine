@@ -48,10 +48,7 @@ void mat2_ident(uObjMtx *dst, float scale) {
 }
 // cos -sin sin cos
 void mat2_rotate(uObjMtx *dst, f32 degrees) {
-	dst->m.A = ftoq(cosf(degrees));
-	dst->m.B = ftoq(sinf(degrees));
-	dst->m.C = ftoq(-sinf(degrees));
-	dst->m.D = ftoq(cosf(degrees));
+	
 }
 
 void mat2_mul(uObjMtx *m1, uObjMtx *m2) {
@@ -78,8 +75,7 @@ void mat2_translate(uObjMtx *m, int x, int y) {
 }
 
 void mat2_translate_vec(uObjMtx *m, f32 degrees, f32 mag) {
-	m->m.X += FTOFIX16(mag * cosf(degrees));
-	m->m.Y += FTOFIX16(mag * sinf(degrees));
+	
 }
 
 typedef float Mat4[4][4];
