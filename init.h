@@ -5,8 +5,8 @@
 
 #define s2d_text gspS2DEX2_fifoTextStart
 #define s2d_data gspS2DEX2_fifoDataStart
-#define zex_text gspF3DZEX2_PosLight_fifoTextStart
-#define zex_data gspF3DZEX2_PosLight_fifoDataStart
+#define zex_text gspF3DZEX_NoN_PosLight_fifoTextStart
+#define zex_data gspF3DZEX_NoN_PosLight_fifoDataStart
 
 extern void s2d_init(void);
 
